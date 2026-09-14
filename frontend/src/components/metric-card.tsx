@@ -1,0 +1,1 @@
+export function MetricCard({ label, value, detail, tone }: { label: string; value: number | string; detail: string; tone: "teal" | "orange" | "blue" | "rose" }) { return <article className={`metric-card metric-${tone}`}><div className="metric-top"><span>{label}</span><span className="metric-spark">↗</span></div><strong>{value}</strong><small>{detail}</small></article>; }

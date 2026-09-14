@@ -1,0 +1,21 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { useAuth } from "@/context/auth-context";
+import { ApiError } from "@/lib/types";
+
+function Field({ label, value, onChange, type = "text", placeholder, autoComplete }: { label: string; value: string; onChange: (value: string) => void; type?: string; placeholder: string; autoComplete?: string }) { return <label className="field"><span>{label}</span><input required type={type} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} autoComplete={autoComplete} /></label>; }
+
+export function LoginForm() {
+  const { login } = useAuth(); const router = useRouter(); const searchParams = useSearchParams(); const [email, setEmail] = useState(""); const [password, setPassword] = useState(""); const [remember, setRemember] = useState(true); const [error, setError] = useState<string | null>(null); const [busy, setBusy] = useState(false);
+  const submit = async (event: React.FormEvent<HTMLFormElement>) => { event.preventDefault(); setError(null); setBusy(true); try { await login(email, password, remember); const next = searchParams.get("next"); router.replace(next && /^\/(?:dashboard|clients|projects|tasks|invoices)(?:\/|$|\?)/.test(next) && !next.includes("\\") ? next : "/dashboard"); } catch (cause) { setError(cause instanceof ApiError ? cause.message : "Unable to sign in right now."); } finally { setBusy(false); } };
+  return <form onSubmit={submit} className="auth-form"><Field label="Email" type="email" value={email} onChange={setEmail} placeholder="you@company.com" autoComplete="email" /><Field label="Password" type="password" value={password} onChange={setPassword} placeholder="Your password" autoComplete="current-password" /><div className="auth-options"><label className="check-row"><input type="checkbox" checked={remember} onChange={(event) => setRemember(event.target.checked)} /> Keep me signed in</label><Link href="/forgot-password">Forgot password?</Link></div>{searchParams.get("reset") === "success" && <div className="auth-success" role="status">Password reset. You can sign in with your new password.</div>}{error && <div className="form-error" role="alert">{error}</div>}<button className="primary-button" disabled={busy}>{busy ? "Signing in..." : "Sign in"}<span>→</span></button><p className="form-switch">New to ClientFlow? <Link href="/register">Create an account</Link></p></form>;
+}
+
+export function RegisterForm() {
+  const { register } = useAuth(); const router = useRouter(); const [values, setValues] = useState({ name: "", email: "", password: "", confirmation: "" }); const [error, setError] = useState<string | null>(null); const [busy, setBusy] = useState(false); const update = (key: keyof typeof values) => (value: string) => setValues((current) => ({ ...current, [key]: value }));
+  const submit = async (event: React.FormEvent<HTMLFormElement>) => { event.preventDefault(); setError(null); setBusy(true); try { await register(values.name, values.email, values.password, values.confirmation); router.replace("/dashboard"); } catch (cause) { setError(cause instanceof ApiError ? Object.values(cause.errors).flat()[0] ?? cause.message : "Unable to create your account right now."); } finally { setBusy(false); } };
+  return <form onSubmit={submit} className="auth-form"><Field label="Full name" value={values.name} onChange={update("name")} placeholder="Jane Doe" autoComplete="name" /><Field label="Email" type="email" value={values.email} onChange={update("email")} placeholder="you@company.com" autoComplete="email" /><Field label="Password" type="password" value={values.password} onChange={update("password")} placeholder="At least 8 characters" autoComplete="new-password" /><Field label="Confirm password" type="password" value={values.confirmation} onChange={update("confirmation")} placeholder="Repeat your password" autoComplete="new-password" />{error && <div className="form-error" role="alert">{error}</div>}<button className="primary-button" disabled={busy}>{busy ? "Creating workspace..." : "Create workspace"}<span>→</span></button><p className="form-switch">Already have an account? <Link href="/login">Sign in</Link></p></form>;
+}

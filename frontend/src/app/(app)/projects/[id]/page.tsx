@@ -1,0 +1,15 @@
+"use client";
+
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
+import { formatCents } from "@/lib/money";
+import { ApiError, type Project } from "@/lib/types";
+import { PageHeader } from "@/components/page-header";
+import { ProjectDeleteAction } from "@/components/project-delete-action";
+import { ProjectStatusBadge } from "@/components/project-status-badge";
+
+export default function ProjectDetailPage() { const { id } = useParams<{ id: string }>(); const [project, setProject] = useState<Project | null>(null); const [error, setError] = useState<string | null>(null); const [missing, setMissing] = useState(false); useEffect(() => { void api.project(id).then((response) => setProject(response.data)).catch((cause: unknown) => { if (cause instanceof ApiError && cause.status === 404) setMissing(true); else setError(cause instanceof ApiError ? cause.message : "The project could not be loaded."); }); }, [id]); if (!project && !error && !missing) return <div className="screen-state"><span className="spinner" />Loading project...</div>; if (missing) return <div className="notice notice-warning"><strong>Project not found</strong><span>This project may have been deleted or you may not have access to it.</span><Link href="/projects" className="text-button">Back to projects</Link></div>; if (error || !project) return <div className="notice notice-warning"><strong>Couldn’t load project</strong><span>{error ?? "Unexpected project response."}</span><button className="text-button" onClick={() => window.location.reload()}>Try again</button></div>; return <div><Link href="/projects" className="back-link">← Back to projects</Link><PageHeader eyebrow="Project profile" title={project.name} description={project.client.company ? `${project.client.name} — ${project.client.company}` : project.client.name} /><div className="detail-layout"><section className="panel client-detail-card"><div className="project-detail-top"><ProjectStatusBadge status={project.status} /><div className="detail-actions"><Link href={`/projects/${project.id}/edit`} className="secondary-button">Edit project</Link><ProjectDeleteAction id={project.id} /></div></div><div className="detail-fields"><DetailField label="Client" value={project.client.name} href={`/clients/${project.client_id}`} /><DetailField label="Budget" value={formatCents(project.budget_cents, project.currency_code)} /><DetailField label="Start date" value={project.start_date} /><DetailField label="End date" value={project.end_date} /><DetailField label="Description" value={project.description} wide /></div></section></div></div>; }
+
+function DetailField({ label, value, href, wide = false }: { label: string; value: string | null; href?: string; wide?: boolean }) { return <div className={`detail-field ${wide ? "detail-field-wide" : ""}`}><span>{label}</span>{href && value ? <Link href={href}>{value}</Link> : <p>{value || "Not provided"}</p>}</div>; }
