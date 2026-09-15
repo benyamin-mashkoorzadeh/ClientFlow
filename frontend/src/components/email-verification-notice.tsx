@@ -29,8 +29,12 @@ export function EmailVerificationNotice() {
         await api.resendVerification();
         setMessage("Verification link sent. Check your inbox and spam folder.");
       } else {
-        await refreshUser();
-        setMessage("If you opened the verification link, this notice will disappear once your account is updated.");
+        const response = await refreshUser();
+        if (!response.user.email_verified_at) {
+          setMessage("Your email hasn't been verified yet. Please use the verification link we sent to your email.");
+          return;
+        }
+        router.replace("/dashboard");
       }
     } catch (cause) {
       setError(cause instanceof ApiError && cause.status === 429 ? "Please wait before requesting another link." : "This action could not be completed. Please try again.");

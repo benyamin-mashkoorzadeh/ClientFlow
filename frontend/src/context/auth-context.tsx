@@ -2,9 +2,9 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { api } from "@/lib/api";
-import { ApiError, type User, type Workspace } from "@/lib/types";
+import { ApiError, type AuthResponse, type User, type Workspace } from "@/lib/types";
 
-type AuthContextValue = { user: User | null; workspace: Workspace | null; isLoading: boolean; login: (email: string, password: string, remember: boolean) => Promise<void>; register: (name: string, email: string, password: string, confirmation: string) => Promise<void>; logout: () => Promise<void>; refreshUser: () => Promise<void> };
+type AuthContextValue = { user: User | null; workspace: Workspace | null; isLoading: boolean; login: (email: string, password: string, remember: boolean) => Promise<void>; register: (name: string, email: string, password: string, confirmation: string) => Promise<void>; logout: () => Promise<void>; refreshUser: () => Promise<AuthResponse> };
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -14,7 +14,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.addEventListener("clientflow:session-expired", expire);
     return () => window.removeEventListener("clientflow:session-expired", expire);
   }, []);
-  const refreshUser = async () => { try { const response = await api.currentUser(); setUser(response.user); setWorkspace(response.workspace); } catch (error) { if (error instanceof ApiError && error.status === 401) { setUser(null); setWorkspace(null); } else throw error; } finally { setIsLoading(false); } };
+  const refreshUser = async () => { try { const response = await api.currentUser(); setUser(response.user); setWorkspace(response.workspace); return response; } catch (error) { if (error instanceof ApiError && error.status === 401) { setUser(null); setWorkspace(null); } throw error; } finally { setIsLoading(false); } };
   useEffect(() => {
     let active = true;
     void api.currentUser().then((response) => {
