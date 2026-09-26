@@ -81,3 +81,24 @@ test("a failed CSRF check does not retry an unsafe mutation", async () => {
   await assert.rejects(api.updateClient("1", { name: "Updated" }), (error) => error instanceof ApiError && error.status === 419);
   assert.equal(requests, 1);
 });
+
+test("demo login bootstraps CSRF and posts to the dedicated endpoint without credentials", async () => {
+  const document = { cookie: "" };
+  const calls = [];
+  const { api } = loadApi(async (url, init) => {
+    calls.push({ url, init });
+    if (url.endsWith("/sanctum/csrf-cookie")) {
+      document.cookie = "XSRF-TOKEN=demo-token";
+      return new Response(null, { status: 204 });
+    }
+    return json({ user: { id: 99 }, workspace: { id: 44 } });
+  }, document);
+
+  await api.demoLogin();
+
+  assert.deepEqual(calls.map(({ url }) => new URL(url).pathname), ["/sanctum/csrf-cookie", "/api/demo/login"]);
+  assert.equal(calls[1].init.method, "POST");
+  assert.equal(calls[1].init.body, undefined);
+  assert.equal(calls[1].init.credentials, "include");
+  assert.equal(calls[1].init.headers.get("X-XSRF-TOKEN"), "demo-token");
+});

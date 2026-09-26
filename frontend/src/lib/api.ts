@@ -38,6 +38,7 @@ async function request<T>(path: string, init: RequestInit = {}, csrf?: CsrfRequi
 export const api = {
   currentUser: () => request<AuthResponse>("/api/user"),
   login: (payload: { email: string; password: string; remember?: boolean }) => request<AuthResponse>("/api/login", { method: "POST", body: JSON.stringify(payload) }, "bootstrap"),
+  demoLogin: () => request<AuthResponse>("/api/demo/login", { method: "POST" }, "bootstrap"),
   register: (payload: { name: string; email: string; password: string; password_confirmation: string }) => request<AuthResponse>("/api/register", { method: "POST", body: JSON.stringify(payload) }, "bootstrap"),
   forgotPassword: (email: string) => request<{ message: string }>("/api/forgot-password", { method: "POST", body: JSON.stringify({ email }) }, "bootstrap"),
   resetPassword: (payload: { token: string; email: string; password: string; password_confirmation: string }) => request<{ message: string }>("/api/reset-password", { method: "POST", body: JSON.stringify(payload) }, "bootstrap"),

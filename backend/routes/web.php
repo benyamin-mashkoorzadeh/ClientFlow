@@ -11,6 +11,7 @@ Route::get('/', function () {
 Route::prefix('api')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/demo/login', [AuthController::class, 'demoLogin'])->middleware('throttle:10,1');
     Route::post('/forgot-password', [PasswordController::class, 'forgotPassword']);
     Route::post('/reset-password', [PasswordController::class, 'resetPassword']);
 });

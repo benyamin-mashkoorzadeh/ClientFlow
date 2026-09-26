@@ -49,4 +49,10 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->activeWorkspaceMembership()?->workspace;
     }
+
+    public function isDemo(): bool
+    {
+        return strcasecmp($this->email, (string) config('demo.email')) === 0
+            && $this->activeWorkspace()?->slug === config('demo.workspace_slug');
+    }
 }

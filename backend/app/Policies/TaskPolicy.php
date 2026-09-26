@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Task;
 use App\Models\User;
+
 class TaskPolicy
 {
     public function viewAny(User $user): bool
@@ -28,7 +29,8 @@ class TaskPolicy
 
     public function delete(User $user, Task $task): bool
     {
-        return $task->workspace_id === $user->activeWorkspace()?->id;
+        return ! $user->isDemo()
+            && $task->workspace_id === $user->activeWorkspace()?->id;
     }
 
     public function restore(User $user, Task $task): bool

@@ -74,6 +74,29 @@ class AuthController extends Controller
         ]);
     }
 
+    public function demoLogin(Request $request): JsonResponse
+    {
+        $user = User::query()
+            ->where('email', config('demo.email'))
+            ->first();
+        $workspace = $user?->activeWorkspace();
+
+        if (! $user || ! $user->hasVerifiedEmail() || $workspace?->slug !== config('demo.workspace_slug')) {
+            return response()->json([
+                'message' => 'The demo workspace is not available right now.',
+            ], 503);
+        }
+
+        Auth::guard('web')->login($user);
+        $request->session()->regenerate();
+
+        return response()->json([
+            'message' => 'Demo login successful.',
+            'user' => $user,
+            'workspace' => $workspace,
+        ]);
+    }
+
     public function logout(Request $request): JsonResponse
     {
         Auth::shouldUse('web');

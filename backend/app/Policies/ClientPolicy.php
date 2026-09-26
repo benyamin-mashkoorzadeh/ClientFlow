@@ -29,7 +29,8 @@ class ClientPolicy
 
     public function delete(User $user, Client $client): bool
     {
-        return $client->workspace_id === $user->activeWorkspace()?->id;
+        return ! $user->isDemo()
+            && $client->workspace_id === $user->activeWorkspace()?->id;
     }
 
     public function restore(User $user, Client $client): bool

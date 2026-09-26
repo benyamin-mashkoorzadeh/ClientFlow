@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Invoice;
 use App\Models\User;
+
 class InvoicePolicy
 {
     public function viewAny(User $user): bool
@@ -28,7 +29,8 @@ class InvoicePolicy
 
     public function delete(User $user, Invoice $invoice): bool
     {
-        return $invoice->workspace_id === $user->activeWorkspace()?->id;
+        return ! $user->isDemo()
+            && $invoice->workspace_id === $user->activeWorkspace()?->id;
     }
 
     public function restore(User $user, Invoice $invoice): bool

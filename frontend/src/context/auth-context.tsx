@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import { api } from "@/lib/api";
 import { ApiError, type AuthResponse, type User, type Workspace } from "@/lib/types";
 
-type AuthContextValue = { user: User | null; workspace: Workspace | null; isLoading: boolean; login: (email: string, password: string, remember: boolean) => Promise<void>; register: (name: string, email: string, password: string, confirmation: string) => Promise<void>; logout: () => Promise<void>; refreshUser: () => Promise<AuthResponse> };
+type AuthContextValue = { user: User | null; workspace: Workspace | null; isLoading: boolean; login: (email: string, password: string, remember: boolean) => Promise<void>; demoLogin: () => Promise<void>; register: (name: string, email: string, password: string, confirmation: string) => Promise<void>; logout: () => Promise<void>; refreshUser: () => Promise<AuthResponse> };
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -32,9 +32,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => { active = false; };
   }, []);
   const login = async (email: string, password: string, remember: boolean) => { const response = await api.login({ email, password, remember }); setUser(response.user); setWorkspace(response.workspace); };
+  const demoLogin = async () => { const response = await api.demoLogin(); setUser(response.user); setWorkspace(response.workspace); };
   const register = async (name: string, email: string, password: string, confirmation: string) => { const response = await api.register({ name, email, password, password_confirmation: confirmation }); setUser(response.user); setWorkspace(response.workspace); };
   const logout = async () => { await api.logout(); setUser(null); setWorkspace(null); };
-  return <AuthContext.Provider value={{ user, workspace, isLoading, login, register, logout, refreshUser }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, workspace, isLoading, login, demoLogin, register, logout, refreshUser }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() { const context = useContext(AuthContext); if (!context) throw new Error("useAuth must be used inside AuthProvider"); return context; }
